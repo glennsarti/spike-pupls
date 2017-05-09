@@ -148,6 +148,11 @@ module EventMachine
     def release_machine
     end
 
+    # Modified as part of Langauge Server
+    def report_connection_error_status target
+      selectable = Reactor.instance.get_selectable( target )
+      selectable ? 0 : -1
+    end
 
     def stopping?
       return Reactor.instance.stop_scheduled
