@@ -1,4 +1,3 @@
-# https://raw.githubusercontent.com/ibc/em-jsonrpc/master/lib/em-jsonrpc/server.rb
 require 'eventmachine'
 require 'json'
 
@@ -55,7 +54,7 @@ module PuppetLanguageServer
       return unless data.length > 0
       return if @state == :ignore
 
-      # TODO: Thread/Atomic safe? probbaly not
+      # TODO: Thread/Atomic safe? probably not
       @buffer = @buffer + data.bytes.to_a
 
       while (@buffer.length > 4) do
@@ -77,7 +76,7 @@ module PuppetLanguageServer
         minimum_buf_length = offset + 3 + headers['Content-Length'] + 1  # Need to add one as we're converting from offset (zero based) to length (1 based) arrays
         return if @buffer.length < minimum_buf_length
 
-        # Extract the message conet
+        # Extract the message content
         content = @buffer.slice(offset + 3 + 1, headers['Content-Length']).pack('C*').force_encoding('utf-8') # TODO: default is utf-8.  Need to enode based on Content-Type
         # Purge the buffer
         @buffer = @buffer.slice(minimum_buf_length,@buffer.length - minimum_buf_length)
@@ -176,6 +175,19 @@ puts "--- INBOUND\n#{data}\n---"
           KEY_MESSAGE => message
         }
       })
+    end
+
+    def reply_diagnostics(uri, diagnostics)
+      return nil if error?
+
+      response = {
+        KEY_JSONRPC => VALUE_VERSION,
+        KEY_METHOD => 'textDocument/publishDiagnostics',
+        KEY_PARAMS => { 'uri' => uri, 'diagnostics' => diagnostics}
+      }
+
+      send_response(encode_json(response))
+      return true
     end
 
     # This method could be overriden in the user's inherited class.

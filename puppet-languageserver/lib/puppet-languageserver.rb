@@ -4,6 +4,7 @@ require 'lib/puppet-languageserver/rpc_constants'
 require 'lib/puppet-languageserver/rpc_server'
 require 'lib/puppet-languageserver/message_router'
 require 'lib/puppet-languageserver/server_capabilities'
+require 'lib/puppet-languageserver/document_validator'
 
 require 'eventmachine'
 

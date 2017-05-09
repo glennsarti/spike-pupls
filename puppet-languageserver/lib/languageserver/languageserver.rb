@@ -1,4 +1,4 @@
-%w(constants).each do |lib|
+%w(constants diagnostic).each do |lib|
   begin
     require "#{lib}"
   rescue LoadError
