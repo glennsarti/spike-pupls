@@ -1,7 +1,7 @@
 source ENV['GEM_SOURCE'] || "https://rubygems.org"
 
 #gem "em-jsonrpc", :require => false
-gem "eventmachine", :require => false
+#gem "eventmachine", :require => false
 
 # Evaluate Gemfile.local if it exists
 if File.exists? "#{__FILE__}.local"

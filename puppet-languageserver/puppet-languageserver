@@ -1,8 +1,14 @@
 #!/usr/bin/env ruby
 
-$LOAD_PATH.unshift(File.dirname(__FILE__))
-require 'rubygems' unless defined?(Gem)
+# $LOAD_PATH.unshift(File.dirname(__FILE__))
+# require 'rubygems' unless defined?(Gem)
 
-require 'lib/puppet-languageserver'
+# require 'lib/puppet-languageserver'
+
+# Add the language server into the load path
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__),'lib'))
+# Add the vendored gems into the load path
+$LOAD_PATH.unshift(File.join(File.dirname(__FILE__),'vendor','eventmachine','lib'))
+require 'puppet-languageserver'
 
 PuppetLanguageServer::RPCServer(ARGV)
