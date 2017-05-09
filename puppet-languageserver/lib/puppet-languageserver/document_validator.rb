@@ -2,6 +2,7 @@ module PuppetLanguageServer
 
   module DocumentValidator
     def self.validate(content, max_problems = 100)
+      # TODO: Need to actually do something with max_problems
       # Example validator from https://github.com/Microsoft/vscode-languageserver-node-example/blob/master/server/src/server.ts#L70
       result = []
 

@@ -30,11 +30,26 @@ module PuppetLanguageServer
         when 'initialize'
           PuppetLanguageServer::LogMessage('debug','Received initialize method')
           request.reply_result( { 'capabilities' => PuppetLanguageServer::ServerCapabilites.capabilities} )
+
         when 'shutdown'
           PuppetLanguageServer::LogMessage('debug','Received shutdown method')
           request.reply_result(nil)
+
+        when 'textDocument/completion'
+          file_uri = request.params['textDocument']['uri']
+          line_num = request.params['position']['line']
+          char_num = request.params['position']['character']
+          content = @@documents.document(file_uri)
+          request.reply_result(PuppetLanguageServer::CompletionProvider.complete(content, line_num, char_num))
+
+        when 'completionItem/resolve'
+          label = request.params['label']
+          kind = request.params['kind']
+          data = request.params['data']
+          request.reply_result(PuppetLanguageServer::CompletionProvider.resolve(label, kind, data))
+
         else
-          PuppetLanguageServer::LogMessage('error','Unknown RPC method #{request.rpc_method}')
+          PuppetLanguageServer::LogMessage('error',"Unknown RPC method #{request.rpc_method}")
       end
     end
 
@@ -42,23 +57,28 @@ module PuppetLanguageServer
       case method
         when 'initialized'
           PuppetLanguageServer::LogMessage('information','Client has received initialization')
+
         when 'exit'
           PuppetLanguageServer::LogMessage('information','Received exit notification.  Shutting down.')
           EventMachine::stop_event_loop
+
         when 'textDocument/didOpen'
           PuppetLanguageServer::LogMessage('information','Received textDocument/didOpen notification.')
           file_uri = params['textDocument']['uri']
           content = params['textDocument']['text']
           @@documents.set_document(file_uri, content)
           reply_diagnostics(file_uri, PuppetLanguageServer::DocumentValidator.validate(content))
+
         when 'textDocument/didChange'
           PuppetLanguageServer::LogMessage('information','Received textDocument/didChange notification.')
           file_uri = params['textDocument']['uri']
           content = params['contentChanges'][0]['text'] # TODO: Bad
           @@documents.set_document(file_uri, content)
           reply_diagnostics(file_uri, PuppetLanguageServer::DocumentValidator.validate(content))
+
         when 'textDocument/didSave'
           PuppetLanguageServer::LogMessage('information','Received textDocument/didSave notification.')
+
         else
           PuppetLanguageServer::LogMessage('error',"Unknown RPC notification #{method}")
       end

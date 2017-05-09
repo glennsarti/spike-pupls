@@ -1,4 +1,4 @@
-%w(constants diagnostic).each do |lib|
+%w(constants diagnostic completion_list completion_item).each do |lib|
   begin
     require "#{lib}"
   rescue LoadError

@@ -5,6 +5,7 @@ require 'lib/puppet-languageserver/rpc_server'
 require 'lib/puppet-languageserver/message_router'
 require 'lib/puppet-languageserver/server_capabilities'
 require 'lib/puppet-languageserver/document_validator'
+require 'lib/puppet-languageserver/completion_provider'
 
 require 'eventmachine'
 

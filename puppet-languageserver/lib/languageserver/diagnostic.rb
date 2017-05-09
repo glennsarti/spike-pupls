@@ -1,6 +1,4 @@
 module LanguageServer
-
-
   # interface Diagnostic {
   #   /**
   #    * The range at which the message applies.
@@ -29,6 +27,7 @@ module LanguageServer
   #    */
   #   message: string;
   # }
+
   module Diagnostic
     def self.create(options)
       result = {}
