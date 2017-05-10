@@ -53,9 +53,12 @@ module PuppetLanguageServer
           line_num = request.params['position']['line']
           char_num = request.params['position']['character']
           content = @@documents.document(file_uri)
-
-          request.reply_result(PuppetLanguageServer::HoverProvider.resolve(label, kind, data))
-
+          begin
+            request.reply_result(PuppetLanguageServer::HoverProvider.resolve(content, line_num, char_num))
+          rescue => exception
+            PuppetLanguageServer::LogMessage('error',"(textDocument/hover) #{exception}")
+            request.reply_result(LanguageServer::Hover.create_nil_response())
+          end
         else
           PuppetLanguageServer::LogMessage('error',"Unknown RPC method #{request.rpc_method}")
       end

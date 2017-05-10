@@ -25,5 +25,12 @@ module LanguageServer
 
       result
     end
+
+    def self.create_nil_response
+      result = {}
+      result['contents'] = nil
+
+      result
+    end
   end
 end
