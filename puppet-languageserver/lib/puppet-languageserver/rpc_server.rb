@@ -1,4 +1,8 @@
-require 'em/pure_ruby'
+if ENV['NATIVE_EVENTMACHINE'].nil?
+  require 'em/pure_ruby'
+else
+  require 'eventmachine'
+end
 require 'json'
 
 module PuppetLanguageServer

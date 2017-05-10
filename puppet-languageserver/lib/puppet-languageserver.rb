@@ -8,6 +8,7 @@ require 'puppet-languageserver/document_validator'
 require 'puppet-languageserver/completion_provider'
 
 require 'puppet'
+Puppet.initialize_settings
 
 module PuppetLanguageServer
   def self.LogMessage(severity, message)
