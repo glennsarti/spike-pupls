@@ -48,6 +48,14 @@ module PuppetLanguageServer
           data = request.params['data']
           request.reply_result(PuppetLanguageServer::CompletionProvider.resolve(label, kind, data))
 
+        when 'textDocument/hover'
+          file_uri = request.params['textDocument']['uri']
+          line_num = request.params['position']['line']
+          char_num = request.params['position']['character']
+          content = @@documents.document(file_uri)
+
+          request.reply_result(PuppetLanguageServer::HoverProvider.resolve(label, kind, data))
+
         else
           PuppetLanguageServer::LogMessage('error',"Unknown RPC method #{request.rpc_method}")
       end
@@ -57,6 +65,8 @@ module PuppetLanguageServer
       case method
         when 'initialized'
           PuppetLanguageServer::LogMessage('information','Client has received initialization')
+          # DEBUG - Send a message with the Puppet version
+          send_show_message_notification(3, "Using Puppet v#{Puppet::version}")
 
         when 'exit'
           PuppetLanguageServer::LogMessage('information','Received exit notification.  Shutting down.')

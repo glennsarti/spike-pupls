@@ -194,6 +194,17 @@ puts "--- INBOUND\n#{data}\n---"
       return true
     end
 
+    def send_show_message_notification(msg_type, message)
+      response = {
+        KEY_JSONRPC => VALUE_VERSION,
+        KEY_METHOD => 'window/showMessage',
+        KEY_PARAMS => { 'type' => msg_type, 'message' => message}
+      }
+
+      send_response(encode_json(response))
+      return true
+    end
+
     # This method could be overriden in the user's inherited class.
     def parsing_error(data, exception)
       $stderr.puts "parsing error:\n#{exception.message}"

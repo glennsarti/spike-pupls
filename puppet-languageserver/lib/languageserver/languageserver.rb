@@ -1,4 +1,4 @@
-%w(constants diagnostic completion_list completion_item).each do |lib|
+%w(constants diagnostic completion_list completion_item hover).each do |lib|
   begin
     require "languageserver/#{lib}"
   rescue LoadError

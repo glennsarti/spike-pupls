@@ -21,6 +21,7 @@ module PuppetLanguageServer
 
       {
         'textDocumentSync' => LanguageServer::TEXTDOCUMENTSYNCKIND_FULL,
+        'hoverProvider' => true,
         'completionProvider' => {
           'resolveProvider' => true,
         }
