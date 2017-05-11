@@ -26,23 +26,59 @@ module PuppetLanguageServer
       return LanguageServer::Hover.create_nil_response() if valid_models.length == 0
       item = valid_models[0]
 
-      content = ''
+      content = nil
       case item.class.to_s
+        when "Puppet::Pops::Model::QualifiedName"
+          # Get the parent resource class
+          parent_klass = item
+          while !parent_klass.nil? && parent_klass.class.to_s != "Puppet::Pops::Model::ResourceExpression"
+            parent_klass = parent_klass.eContainer
+          end
+
+          # Instaniate an instance of the type
+          item_type = Puppet::Type.type(parent_klass.type_name.value)
+          content = "**#{parent_klass.type_name.value}** Resource\n\n"
+          # List out all attributes (Params + Props)
+          attrs = []
+          item_type.parameters.each { |param| attrs << param.to_s }
+          item_type.properties.each do |prop|
+            content = content + prop.name.to_s
+            #(content = content + ' (_required_)') if prop.isrequired
+            content = content + "\n\n"
+          end
+          attrs.sort.each { |attr| content = content + attr + "\n\n" }
+
         when "Puppet::Pops::Model::AttributeOperation"
           # Get the parent resource class
           parent_klass = item.eContainer
           while !parent_klass.nil? && parent_klass.class.to_s != "Puppet::Pops::Model::ResourceBody"
             parent_klass = parent_klass.eContainer
           end
+          raise "Unable to find suitable parent object for object of type #{item.class.to_s}" if parent_klass.nil?
 
-          content = "attribute '#{item.attribute_name}' in class '#{parent_klass.eContainer.type_name.value}' with title '#{parent_klass.title.value}'"
+          # Instaniate an instance of the type
+          item_type = Puppet::Type.type(parent_klass.eContainer.type_name.value)
+          # Check if it's a property
+          attribute = item_type.validproperty?(item.attribute_name)
+          if attribute != false
+            content = "**#{item.attribute_name}** Property\n\n"
+            content = content + " (_required_)" if attribute.isrequired
+            content = content + "\n" + attribute.doc.to_s + "\n"
+          elsif item_type.validparameter?(item.attribute_name.intern)
+            content = "**#{item.attribute_name}** Parameter"
+          end
+
         else
           raise "Unable to generate Hover information for object of type #{item.class.to_s}"
       end
 
-      LanguageServer::Hover.create({
-        'contents' => content,
-      })
+      if content.nil?
+        LanguageServer::Hover.create_nil_response()
+      else
+        LanguageServer::Hover.create({
+          'contents' => content,
+        })
+      end
     end
   end
 end
