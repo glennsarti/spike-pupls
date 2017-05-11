@@ -21,10 +21,17 @@ module LanguageServer
       raise('isIncomplete is a required field for CompletionList') if options['isIncomplete'].nil?
       raise('items is a required field for CompletionList') if options['items'].nil?
 
-      result['isIncomplete'] = options['isIncomplete'] 
-      result['items']        = options['items'] 
+      result['isIncomplete'] = options['isIncomplete']
+      result['items']        = options['items']
 
       result
+    end
+
+    def self.create_nil_response()
+      {
+        'isIncomplete' => false,
+        'items'        => [],
+      }
     end
   end
 end

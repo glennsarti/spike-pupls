@@ -40,13 +40,19 @@ module PuppetLanguageServer
           line_num = request.params['position']['line']
           char_num = request.params['position']['character']
           content = @@documents.document(file_uri)
-          request.reply_result(PuppetLanguageServer::CompletionProvider.complete(content, line_num, char_num))
+          begin
+            request.reply_result(PuppetLanguageServer::CompletionProvider.complete(content, line_num, char_num))
+          rescue => exception
+            PuppetLanguageServer::LogMessage('error',"(textDocument/completion) #{exception}")
+            request.reply_result(LanguageServer::CompletionList.create_nil_response())
+          end
 
         when 'completionItem/resolve'
-          label = request.params['label']
-          kind = request.params['kind']
-          data = request.params['data']
-          request.reply_result(PuppetLanguageServer::CompletionProvider.resolve(label, kind, data))
+          # label = request.params['label']
+          # kind = request.params['kind']
+          # data = request.params['data']
+
+          request.reply_result(PuppetLanguageServer::CompletionProvider.resolve(request.params.clone))
 
         when 'textDocument/hover'
           file_uri = request.params['textDocument']['uri']

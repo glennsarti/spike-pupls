@@ -33,9 +33,6 @@ module PuppetLanguageServer
             content = get_resource_expression_content(item.eContainer)
           elsif !item.eContainer.nil? && item.eContainer.class.to_s == "Puppet::Pops::Model::CallNamedFunctionExpression"
             content = get_call_named_function_expression_content(item.eContainer)
-          # else
-          #   require 'pry'; binding.pry
-          #   puts ""
           end
 
         when "Puppet::Pops::Model::AttributeOperation"
@@ -51,11 +48,9 @@ module PuppetLanguageServer
           # Check if it's a property
           attribute = item_type.validproperty?(item.attribute_name)
           if attribute != false
-            content = "**#{item.attribute_name}** Property\n\n"
-            content = content + " (_required_)" if attribute.isrequired
-            content = content + "\n" + attribute.doc.to_s + "\n"
+            content = get_attribute_property_content(item_type, item.attribute_name.intern)
           elsif item_type.validparameter?(item.attribute_name.intern)
-            content = "**#{item.attribute_name}** Parameter"
+            content = get_attribute_parameter_content(item_type, item.attribute_name.intern)
           end
 
         else
@@ -72,6 +67,21 @@ module PuppetLanguageServer
     end
 
     # Content generation functions
+    def self.get_attribute_parameter_content(item_type, param)
+      param_type = item_type.attrclass(param)
+      content = "**#{param}** Parameter"
+      content = content + "\n\n#{param_type.doc}" unless param_type.doc.nil?
+      content
+    end
+
+    def self.get_attribute_property_content(item_type, property)
+      prop_type = item_type.attrclass(property)
+      content = "**#{property}** Property"
+      content = content + "\n\n(_required_)" if prop_type.required?
+      content = content + "\n\n#{prop_type.doc}" unless prop_type.doc.nil?
+      content
+    end
+
     def self.get_call_named_function_expression_content(item)
       func_name = item.functor_expr.value
       raise "Function #{func_name} does not exist" if Puppet::Parser::Functions.function(func_name) == false
@@ -81,7 +91,7 @@ module PuppetLanguageServer
       raise "Function #{func_name} does not have information" if func_info.nil?
 
       # TODO: what about rvalue?
-      content = "**#{func_name}**\n\n" # TODO: Do i add in the params from the arity number?
+      content = "**#{func_name}**\n\n" # TODO: Do I add in the params from the arity number?
       content = content + func_info[:doc]
 
       content
@@ -91,15 +101,23 @@ module PuppetLanguageServer
       # Instaniate an instance of the type
       item_type = Puppet::Type.type(item.type_name.value)
       content = "**#{item.type_name.value}** Resource\n\n"
+      content = content + "\n\n#{item_type.doc}" unless item_type.doc.nil?
+      content = content + "\n\n---\n"
       # List out all attributes (Params + Props)
-      attrs = []
-      item_type.parameters.each { |param| attrs << param.to_s }
-      item_type.properties.each do |prop|
-        content = content + prop.name.to_s
-        #(content = content + ' (_required_)') if prop.isrequired
-        content = content + "\n\n"
-      end
-      attrs.sort.each { |attr| content = content + attr + "\n\n" }
+#require 'pry'; binding.pry
+
+      item_type.allattrs.sort.each { |attr|
+        content = content + "* #{attr}\n"
+      }
+
+      # attrs = []
+      # item_type.parameters.each { |param| attrs << param.to_s }
+      # item_type.properties.each do |prop|
+      #   content = content + prop.name.to_s
+      #   #(content = content + ' (_required_)') if prop.isrequired
+      #   content = content + "\n\n"
+      # end
+      # attrs.sort.each { |attr| content = content + attr + "\n\n" }
 
       content
     end

@@ -65,7 +65,7 @@ module LanguageServer
       result = {}
       raise('label is a required field for CompletionItem') if options['label'].nil?
       raise('kind is a required field for CompletionItem') if options['kind'].nil?
-      raise('Invalid kind for severity') unless (options['kind'] == COMPLETIONITEMKIND_TEXT ||
+      raise('Invalid value for kind') unless (options['kind'] == COMPLETIONITEMKIND_TEXT ||
                                                   options['kind'] == COMPLETIONITEMKIND_METHOD ||
                                                   options['kind'] == COMPLETIONITEMKIND_FUNCTION ||
                                                   options['kind'] == COMPLETIONITEMKIND_CONSTRUCTOR ||
@@ -87,7 +87,7 @@ module LanguageServer
 
       result['label']               = options['label'] 
       result['kind']                = options['kind'] 
-      result['data']                = options['data'] 
+      result['data']                = options['data']
       result['detail']              = options['detail'] unless options['detail'].nil?
       result['documentation']       = options['documentation'] unless options['documentation'].nil?
       result['sortText']            = options['sortText'] unless options['sortText'].nil?
