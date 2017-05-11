@@ -29,24 +29,14 @@ module PuppetLanguageServer
       content = nil
       case item.class.to_s
         when "Puppet::Pops::Model::QualifiedName"
-          # Get the parent resource class
-          parent_klass = item
-          while !parent_klass.nil? && parent_klass.class.to_s != "Puppet::Pops::Model::ResourceExpression"
-            parent_klass = parent_klass.eContainer
+          if !item.eContainer.nil? && item.eContainer.class.to_s == "Puppet::Pops::Model::ResourceExpression"
+            content = get_resource_expression_content(item.eContainer)
+          elsif !item.eContainer.nil? && item.eContainer.class.to_s == "Puppet::Pops::Model::CallNamedFunctionExpression"
+            content = get_call_named_function_expression_content(item.eContainer)
+          # else
+          #   require 'pry'; binding.pry
+          #   puts ""
           end
-
-          # Instaniate an instance of the type
-          item_type = Puppet::Type.type(parent_klass.type_name.value)
-          content = "**#{parent_klass.type_name.value}** Resource\n\n"
-          # List out all attributes (Params + Props)
-          attrs = []
-          item_type.parameters.each { |param| attrs << param.to_s }
-          item_type.properties.each do |prop|
-            content = content + prop.name.to_s
-            #(content = content + ' (_required_)') if prop.isrequired
-            content = content + "\n\n"
-          end
-          attrs.sort.each { |attr| content = content + attr + "\n\n" }
 
         when "Puppet::Pops::Model::AttributeOperation"
           # Get the parent resource class
@@ -80,5 +70,39 @@ module PuppetLanguageServer
         })
       end
     end
+
+    # Content generation functions
+    def self.get_call_named_function_expression_content(item)
+      func_name = item.functor_expr.value
+      raise "Function #{func_name} does not exist" if Puppet::Parser::Functions.function(func_name) == false
+
+      function_module = Puppet::Parser::Functions.environment_module(Puppet.lookup(:current_environment))
+      func_info = function_module.get_function_info(func_name.intern)
+      raise "Function #{func_name} does not have information" if func_info.nil?
+
+      # TODO: what about rvalue?
+      content = "**#{func_name}**\n\n" # TODO: Do i add in the params from the arity number?
+      content = content + func_info[:doc]
+
+      content
+    end
+
+    def self.get_resource_expression_content(item)
+      # Instaniate an instance of the type
+      item_type = Puppet::Type.type(item.type_name.value)
+      content = "**#{item.type_name.value}** Resource\n\n"
+      # List out all attributes (Params + Props)
+      attrs = []
+      item_type.parameters.each { |param| attrs << param.to_s }
+      item_type.properties.each do |prop|
+        content = content + prop.name.to_s
+        #(content = content + ' (_required_)') if prop.isrequired
+        content = content + "\n\n"
+      end
+      attrs.sort.each { |attr| content = content + attr + "\n\n" }
+
+      content
+    end
+
   end
 end

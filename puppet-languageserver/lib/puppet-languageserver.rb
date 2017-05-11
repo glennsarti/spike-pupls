@@ -9,15 +9,27 @@ require 'puppet-languageserver/completion_provider'
 require 'puppet-languageserver/hover_provider'
 
 require 'puppet'
-Puppet.initialize_settings
 
 module PuppetLanguageServer
   def self.LogMessage(severity, message)
     puts "[#{severity.upcase}] #{message}"
   end
 
-  def self.RPCServer(args)
+  def self.InitPuppet(args)
     LogMessage('information', "Using Puppet v#{Puppet::version}")
+
+    LogMessage('information', "Initializing settings...")
+    Puppet.initialize_settings
+
+    LogMessage('information', "Creating puppet function environment...")
+    autoloader = Puppet::Parser::Functions.autoloader
+    autoloader.loadall
+
+    true
+  end
+
+  def self.RPCServer(args)
+    LogMessage('information', "Starting RPC Server...")
     EventMachine::run {
       EventMachine::start_server "127.0.0.1", 8081, PuppetLanguageServer::MessageRouter
       #EventMachine::start_server "127.0.0.1", 8081, EchoServer
@@ -27,3 +39,5 @@ module PuppetLanguageServer
     LogMessage('information','Language Server exited.')
   end
 end
+
+PuppetLanguageServer::InitPuppet(ARGV)
