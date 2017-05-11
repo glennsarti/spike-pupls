@@ -48,11 +48,13 @@ module PuppetLanguageServer
           end
 
         when 'completionItem/resolve'
-          # label = request.params['label']
-          # kind = request.params['kind']
-          # data = request.params['data']
-
-          request.reply_result(PuppetLanguageServer::CompletionProvider.resolve(request.params.clone))
+          begin
+            request.reply_result(PuppetLanguageServer::CompletionProvider.resolve(request.params.clone))
+          rescue => exception
+            PuppetLanguageServer::LogMessage('error',"(completionItem/resolve) #{exception}")
+            # Spit back the same params if an error happens
+            request.reply_result(request.params)
+          end
 
         when 'textDocument/hover'
           file_uri = request.params['textDocument']['uri']

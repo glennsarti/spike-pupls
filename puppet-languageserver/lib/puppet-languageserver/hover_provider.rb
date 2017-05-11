@@ -103,21 +103,9 @@ module PuppetLanguageServer
       content = "**#{item.type_name.value}** Resource\n\n"
       content = content + "\n\n#{item_type.doc}" unless item_type.doc.nil?
       content = content + "\n\n---\n"
-      # List out all attributes (Params + Props)
-#require 'pry'; binding.pry
-
       item_type.allattrs.sort.each { |attr|
         content = content + "* #{attr}\n"
       }
-
-      # attrs = []
-      # item_type.parameters.each { |param| attrs << param.to_s }
-      # item_type.properties.each do |prop|
-      #   content = content + prop.name.to_s
-      #   #(content = content + ' (_required_)') if prop.isrequired
-      #   content = content + "\n\n"
-      # end
-      # attrs.sort.each { |attr| content = content + attr + "\n\n" }
 
       content
     end
