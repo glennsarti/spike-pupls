@@ -93,7 +93,7 @@ module PuppetLanguageServer
         when 'textDocument/didChange'
           PuppetLanguageServer::LogMessage('information','Received textDocument/didChange notification.')
           file_uri = params['textDocument']['uri']
-          content = params['contentChanges'][0]['text'] # TODO: Bad
+          content = params['contentChanges'][0]['text'] # TODO: Bad hardcoding zero
           @@documents.set_document(file_uri, content)
           reply_diagnostics(file_uri, PuppetLanguageServer::DocumentValidator.validate(content))
 

@@ -20,10 +20,6 @@ module PuppetLanguageServer
         new_content = content.slice(0,line_offset + char_num) + content.slice(line_offset + char_num + 1, content.length - 1)
 
         result = parser.parse_string(new_content, '')
-
-#        puts line_offset
-#require 'pry'; binding.pry
-#        puts ""
       end
 
       # Convert line and char nums (base 0) to an absolute offset
@@ -64,7 +60,7 @@ module PuppetLanguageServer
 
           # TODO: Should really cache all of the resources and params/props for quick
           # searching and then only actually instatiate when needed.  For the moment,
-          # instiate all the things!
+          # instantiate all the things!
 
           item_type = Puppet::Type.type(item.type_name.value)
           # Add Parameters
