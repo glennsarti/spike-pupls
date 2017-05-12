@@ -28,9 +28,8 @@ module PuppetLanguageServer
     autoloader.loadall
 
     LogMessage('information', "Using Facter v#{Facter.version}")
-    # This bit is optional
-    LogMessage('information', "Running Facter...")
-    PuppetLanguageServer::FacterHelper.load_facts
+    LogMessage('information', "Preloading Facter (Async)...")
+    PuppetLanguageServer::FacterHelper.load_facts_async
 
     true
   end
