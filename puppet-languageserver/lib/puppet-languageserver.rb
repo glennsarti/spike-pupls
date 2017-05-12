@@ -5,6 +5,8 @@ require 'puppet-languageserver/rpc_server'
 require 'puppet-languageserver/message_router'
 require 'puppet-languageserver/server_capabilities'
 require 'puppet-languageserver/document_validator'
+require 'puppet-languageserver/puppet_parser_helper'
+require 'puppet-languageserver/facter_helper'
 require 'puppet-languageserver/completion_provider'
 require 'puppet-languageserver/hover_provider'
 
@@ -24,6 +26,11 @@ module PuppetLanguageServer
     LogMessage('information', "Creating puppet function environment...")
     autoloader = Puppet::Parser::Functions.autoloader
     autoloader.loadall
+
+    LogMessage('information', "Using Facter v#{Facter.version}")
+    # This bit is optional
+    LogMessage('information', "Running Facter...")
+    PuppetLanguageServer::FacterHelper.load_facts
 
     true
   end

@@ -2,32 +2,31 @@ module PuppetLanguageServer
 
   module HoverProvider
     def self.resolve(content, line_num, char_num)
-      
-      # Use Puppet to generate the AST
-      parser = Puppet::Pops::Parser::Parser.new()
-      result = parser.parse_string(content, '')
-
-      # Convert line and char nums (base 0) to an absolute offset
-      #   result.line_offsets contains an array of the offsets on a per line basis e.g.
-      #     [0, 14, 34, 36]  means line number 2 starts at absolute offset 34
-      #   Once we know the line offset, we can simply add on the char_num to get the absolute offset
-      abs_offset = result.line_offsets[line_num] + char_num
-
-      # Enumerate the AST looking for items that span the line/char we want.
-      # Once we have all valid items, sort them by the smallest span.  Typically the smallest span
-      # is the most specific object in the AST
-      #
-      # TODO: Should probably walk the AST and only look for the deepest child, but integer sorting
-      #       is so much easier and faster.
-      valid_models = result.model.eAllContents.select do |item|
-        !item.offset.nil? && !item.length.nil? && abs_offset >= item.offset && abs_offset <= item.offset + item.length
-      end.sort { |a, b| a.length - b.length }
-
-      return LanguageServer::Hover.create_nil_response() if valid_models.length == 0
-      item = valid_models[0]
+      item = PuppetLanguageServer::PuppetParserHelper.object_under_cursor(content, line_num, char_num, false)
+      return LanguageServer::Hover.create_nil_response() if item.nil?
 
       content = nil
       case item.class.to_s
+        when "Puppet::Pops::Model::VariableExpression"
+          expr = item.expr.value
+
+          if expr == 'facts'
+            # We are dealing with the facts variable
+            # Just get the first part of the array and display that
+            if item.eContainer.eContents.length > 1
+              factname = item.eContainer.eContents[1].value
+              content = get_fact_content(factname)
+            end
+          elsif expr.start_with?('::') && expr.rindex(':') == 1
+            # We are dealing with a top local scope variable - Possible fact name
+            factname = expr.slice(2,expr.length - 2)
+            content = get_fact_content(factname)
+          else
+            # Could be a flatout fact name.  May not *shrugs.  That method of access is deprecated
+            content = get_fact_content(expr)
+          end
+          puts ""
+
         when "Puppet::Pops::Model::QualifiedName"
           if !item.eContainer.nil? && item.eContainer.class.to_s == "Puppet::Pops::Model::ResourceExpression"
             content = get_resource_expression_content(item.eContainer)
@@ -67,6 +66,20 @@ module PuppetLanguageServer
     end
 
     # Content generation functions
+    def self.get_fact_content(factname)
+      return nil unless PuppetLanguageServer::FacterHelper.facts.has_key?(factname)
+      value = PuppetLanguageServer::FacterHelper.facts[factname]
+      content = "**#{factname}** Fact\n\n"
+      
+      if value.is_a?(Hash)
+        content = content + "```\n" + JSON.pretty_generate(value) + "\n```"
+      else
+        content = content + value.to_s
+      end
+
+      content
+    end
+
     def self.get_attribute_parameter_content(item_type, param)
       param_type = item_type.attrclass(param)
       content = "**#{param}** Parameter"
