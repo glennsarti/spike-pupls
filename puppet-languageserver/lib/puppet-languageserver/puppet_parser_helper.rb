@@ -26,6 +26,8 @@ module PuppetLanguageServer
       #     [0, 14, 34, 36]  means line number 2 starts at absolute offset 34
       #   Once we know the line offset, we can simply add on the char_num to get the absolute offset
       abs_offset = result.line_offsets[line_num] + char_num
+      # Typically we're completing after something was typed, so go back one char
+      abs_offset = abs_offset - 1 if abs_offset > 0
 
       # Enumerate the AST looking for items that span the line/char we want.
       # Once we have all valid items, sort them by the smallest span.  Typically the smallest span
@@ -37,6 +39,7 @@ module PuppetLanguageServer
         !item.offset.nil? && !item.length.nil? && abs_offset >= item.offset && abs_offset <= item.offset + item.length
       end.sort { |a, b| a.length - b.length }
 
+    # perhaps nil means I'm in the root document?
       return nil if valid_models.length == 0
       item = valid_models[0]
 

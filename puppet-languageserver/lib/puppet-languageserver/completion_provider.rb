@@ -8,6 +8,22 @@ module PuppetLanguageServer
       return LanguageServer::CompletionList.create_nil_response() if item.nil?
 
       case item.class.to_s
+        when "Puppet::Pops::Model::VariableExpression"
+          expr = item.expr.value
+
+          if expr == 'facts'
+            PuppetLanguageServer::FacterHelper.facts.each do |name,value|
+              items << LanguageServer::CompletionItem.create({
+                'label' => "'#{name}'",
+                'kind'  => LanguageServer::COMPLETIONITEMKIND_VARIABLE,
+                'detail' => 'Fact',
+                'data'  => { 'type' => 'variable_expr_fact',
+                             'expr' => name,
+                          },
+              })
+            end
+          end
+
         when "Puppet::Pops::Model::ResourceExpression"
           # We are inside a resource definition.  Should display all available
           # properities and parameters.
@@ -52,6 +68,12 @@ module PuppetLanguageServer
     def self.resolve(completion_item)
       data = completion_item['data'].clone
       case data['type']
+        when 'variable_expr_fact'
+          value = PuppetLanguageServer::FacterHelper.facts[data['expr']]
+          # TODO: More things?
+          completion_item['documentation'] = value.to_s
+          completion_item['insertText'] = "'#{data['expr']}'"
+
         when 'resource_parameter'
           item_type = Puppet::Type.type(data['resource_type'])
           param_type = item_type.attrclass(data['param'].intern)
